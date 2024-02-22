@@ -42,3 +42,4 @@ class RequestForm(BaseModel):
     password: str
     url: str
     bid: str
+    token: str
