@@ -91,7 +91,7 @@ async def signup(form_data: RequestForm):
     description="Login",
     tags=["auth"],
 )
-async def login(form_data: RequestForm = Depends(),
+async def login(form_data: OAuth2PasswordRequestForm = Depends(),
                 auth_token: str = Security(oauth2_scheme)):
     if verify_login(auth_token):
         # Return HTML to avoid POST to GET conversion
