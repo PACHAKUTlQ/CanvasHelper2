@@ -645,22 +645,6 @@ async def get_file(name: str):
     dependencies=[Depends(verify_token)],
 )
 async def open_url(data: URL):
-    # import webbrowser
-
-    # try:
-    #     if data.browser:
-    #         res = webbrowser.get(data.browser).open(data.url)
-    #     else:
-    #         res = webbrowser.open(data.url)
-    #     if not res:
-    #         raise HTTPException(status_code=400,
-    #                             detail="Cannot find web browser")
-    #     return JSONResponse(status_code=200, content={"message": "Opened"})
-    # except Exception as e:
-    #     print(e)
-    #     return JSONResponse(status_code=400,
-    #                         content={"message": "Failed to open"})
-    #return html
     html_content = '<script>window.open("' + data.url + '","_blank")</script>'
     return HTMLResponse(content=html_content, status_code=status.HTTP_200_OK)
 
@@ -674,4 +658,7 @@ if __name__ == "__main__":
         app=app,
         host=uvicorn_domain,
         port=uvicorn_port,
+        ssl_keyfile="key.pem" if path.exists("key.pem") else None,
+        ssl_certfile="cert.pem" if path.exists("cert.pem") else None,
+        log_config=LOGGING_CONFIG,
     )
