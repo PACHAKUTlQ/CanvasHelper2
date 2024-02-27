@@ -11,7 +11,7 @@ uvicorn_port = 9283
 
 NUM_OF_THREADS = 1  # 1 for running locally, (2*cores+1) for running on server
 
-RELOAD = False
+RELOAD = False  # True for development
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

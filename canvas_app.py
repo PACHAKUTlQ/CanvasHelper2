@@ -662,6 +662,5 @@ if __name__ == "__main__":
         ssl_certfile="cert.pem" if path.exists("cert.pem") else None,
         log_config=LOGGING_CONFIG,
         workers=NUM_OF_THREADS,
-        # NUM_OF_THREADS: 1 for running locally, (2*cores+1) for running on server
-        reload=RELOAD,  #True for development
+        reload=RELOAD,
     )
