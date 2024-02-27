@@ -13,7 +13,7 @@ from typing import List
 import requests
 import json
 
-from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM, uvicorn_domain, uvicorn_port
+from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM, uvicorn_domain, uvicorn_port, NUM_OF_THREADS, RELOAD
 from auth import SECRET_KEY, timedelta, verify_login, authenticate_user, create_access_token, create_refresh_token
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
 from models import Position, Check, Course, URL, RequestForm
@@ -655,10 +655,13 @@ if __name__ == "__main__":
     LOGGING_CONFIG["formatters"]["access"][
         "fmt"] = '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
     uvicorn.run(
-        app=app,
+        app="canvas_app:app",
         host=uvicorn_domain,
         port=uvicorn_port,
         ssl_keyfile="key.pem" if path.exists("key.pem") else None,
         ssl_certfile="cert.pem" if path.exists("cert.pem") else None,
         log_config=LOGGING_CONFIG,
+        workers=NUM_OF_THREADS,
+        # NUM_OF_THREADS: 1 for running locally, (2*cores+1) for running on server
+        reload=RELOAD,  #True for development
     )
