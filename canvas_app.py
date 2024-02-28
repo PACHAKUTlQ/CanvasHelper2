@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 from fastapi import FastAPI, Request, UploadFile, Security, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from os import path, listdir, remove, mkdir
 import uvicorn
@@ -91,7 +91,7 @@ async def signup(form_data: RequestForm):
     description="Login",
     tags=["auth"],
 )
-async def login(form_data: OAuth2PasswordRequestForm = Depends(),
+async def login(form_data: RequestForm,
                 auth_token: str = Security(oauth2_scheme)):
     if verify_login(auth_token):
         # Return HTML to avoid POST to GET conversion
@@ -136,7 +136,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
     tags=["auth"],
     dependencies=[Depends(verify_token)],
 )
-async def refresh_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def refresh_token(form_data: RequestForm):
     refresh_token = form_data.password  # Actually refresh_token, but treated as secure as password
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
