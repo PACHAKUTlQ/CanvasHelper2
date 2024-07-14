@@ -108,9 +108,6 @@ class ConfigMGR:
         configuration[key] = value
         self.write_conf(username, configuration)
 
-    def update_conf(self, username, conf):
-        self.write_conf(username, conf)
-
     def set_wallpaper_path(self, username, path):
         self.set_key_value(username, "wallpaper_path", path)
 
