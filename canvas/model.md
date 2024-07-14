@@ -20,7 +20,7 @@ erDiagram
     user_id INTEGER
     course_id INTEGER
     course_name TEXT
-    type TEXT
+    type INTEGER
     maxshow INTEGER
     display_order TEXT
     msg TEXT
