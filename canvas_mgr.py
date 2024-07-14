@@ -218,15 +218,15 @@ class apilink:
 
     def run(self):
         t = self.course_type
-        if t == "ass":
+        if t == 0:
             self.collect_assignment()
-        elif t == "ann":
+        elif t == 1:
             self.collect_announcement()
-        elif t == "dis":
+        elif t == 2:
             self.collect_discussion()
         else:
             raise Exception(
-                f"invalid show type {self.course_type} (only support ass, annc, disc)"
+                f"invalid show type {self.course_type} (only support 0, 1, 2)"
             )
         self.add_custom_info()
 
