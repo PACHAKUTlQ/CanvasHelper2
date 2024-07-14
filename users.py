@@ -1,52 +1,41 @@
-import base64
-# import hashlib
-import json
-from os import path
-from global_config import user_conf_path, user_cache_path, pwd_context
-
-
-def conf_file_name(username):
-    # return user_conf_path + hashlib.md5(
-    #     username.encode()).hexdigest() + '.json'
-    return user_conf_path + base64.b64encode(
-        username.encode("ascii")).decode("utf-8") + '.json'
-
-
-def cache_file_name(username):
-    return user_cache_path + 'cache_' + base64.b64encode(
-        username.encode("ascii")).decode("utf-8") + '.json'
+import sqlite3
+from global_config import DATABASE, pwd_context
 
 
 def create_user(username, password):
-    if user_exists(username):
-        return False
-    else:
-        # create new file
-        initial_conf = {
-            "version": 1,
-            "username": username,
-            "hashed_password": pwd_context.hash(password),
-            "semester_begin": "",
-            "url": "",
-            "bid": "",
-        }
-        # dump initial_conf to file as json
-        with open(conf_file_name(username), 'w') as f:
-            json.dump(initial_conf, f, ensure_ascii=False, indent=4)
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        if user_exists(username, cursor):
+            return False
+        else:
+            hashed_password = pwd_context.hash(password)
+            cursor.execute(
+                '''
+                INSERT INTO users (username, hashed_password) VALUES (?, ?)
+            ''', (username, hashed_password))
+            conn.commit()
+            return True
 
 
 def get_hashed_password(username):
-    user_config_file = conf_file_name(username)
-    if path.exists(user_config_file):
-        with open(user_config_file, 'r') as f:
-            user_info = json.load(f)
-        return user_info.get('hashed_password')
-    else:
-        return None
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            SELECT hashed_password FROM users WHERE username = ?
+        ''', (username, ))
+        result = cursor.fetchone()
+        return result[0] if result else None
 
 
-def user_exists(username):
-    if path.exists(conf_file_name(username)):
-        return True
+def user_exists(username, cursor=None):
+    if cursor is None:
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            return user_exists(username, cursor)
     else:
-        return False
+        cursor.execute(
+            '''
+            SELECT id FROM users WHERE username = ?
+        ''', (username, ))
+        return cursor.fetchone() is not None
