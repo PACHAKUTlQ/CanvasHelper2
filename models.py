@@ -26,7 +26,7 @@ class Check(BaseModel):
 class Course(BaseModel):
     id: int
     name: str
-    type: str
+    type: int
     maxshow: int = -1
     order: str = "normal"
     msg: str = ""

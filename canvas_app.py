@@ -380,7 +380,7 @@ async def delete_course_item(course_id: int,
 async def create_course(course: Course, username: str = Depends(verify_token)):
     conf_content = conf.get_conf(username)
 
-    if course.type not in ["ann", "dis", "ass"]:
+    if course.type not in [0, 1, 2]:
         return JSONResponse(status_code=400,
                             content={"message": "Invalid course type"})
     if course.name == "":
@@ -435,7 +435,7 @@ async def modify_course(index: int,
     if index >= len(courses) or index < 0:
         return JSONResponse(status_code=404,
                             content={"message": "Course not found"})
-    if course.type not in ["ann", "ass", "dis"]:
+    if course.type not in [0, 1, 2]:
         return JSONResponse(status_code=400,
                             content={"message": "Invalid course type"})
     if course.name == "":
