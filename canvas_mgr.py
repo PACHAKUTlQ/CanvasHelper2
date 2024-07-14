@@ -3,10 +3,13 @@
 from datetime import datetime, timedelta
 from math import floor
 import requests
+import sqlite3
 import json
-import os
 
-from users import conf_file_name, cache_file_name
+from global_config import DATABASE
+from config_mgr import ConfigMGR
+
+# from users import conf_file_name, cache_file_name
 """
 Canvas Manager
 
@@ -21,29 +24,19 @@ class CanvasMGR:
     bid = ""
     ucommand = {}
     url = ""
-    output_mode = "html"
 
-    def __init__(self, username: str, output_mode: str = "html") -> None:
+    def __init__(self, username: str) -> None:
         self.username = username
-        self.config_file_path = conf_file_name(username)
-        self.cache_file_name = cache_file_name(username)
-        if not os.path.exists(self.config_file_path):
-            raise Exception(
-                f"No configuration file found for user: {username}")
-        self.output_mode = output_mode
+        self.config_mgr = ConfigMGR()
+        self.config = self.config_mgr.get_conf(username)
+        if self.config is None:
+            raise Exception(f"No configuration found for user: {username}")
         self.reset()
 
     def reset(self):
         self.g_out = ""
         self.g_tformat = "relative"
-
-        # with open("./user_conf.json", "r", encoding="utf-8", errors="ignore") as f:
-        # self.ucommand = json.load(f)
-        with open(self.config_file_path,
-                  "r",
-                  encoding="utf-8",
-                  errors="ignore") as f:
-            self.ucommand = json.load(f)
+        self.ucommand = self.config
 
         self.url = self.ucommand["url"]
         self.bid = self.ucommand["bid"]
@@ -58,15 +51,19 @@ class CanvasMGR:
         if "timeformat" in self.ucommand:
             self.g_tformat = self.ucommand["timeformat"]
 
-    def dump_out(self):
-        """
-        Dump HTML output
-        """
-        obj = {"html": self.g_out[:-1], "json": "{}"}
-        with open(self.cache_file_name, "w", encoding="utf-8",
-                  errors="ignore") as f:
-            json.dump(obj, f, ensure_ascii=False, indent=4)
-        return self.g_out[:-1]
+    def write_cache(self):
+        html = self.g_out[:-1]
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE username = ?",
+                           (self.username, ))
+            user_id = cursor.fetchone()[0]
+            cursor.execute(
+                '''
+                INSERT OR REPLACE INTO user_cache (user_id, html) VALUES (?, ?)
+                ''', (user_id, html))
+            conn.commit()
+            return html
 
     def print_own(self, mystr):
         """
@@ -119,7 +116,7 @@ class CanvasMGR:
         for i in allc:
             self.print_own(i.print_out())
 
-        return self.dump_out()
+        return self.write_cache()
 
 
 class apilink:

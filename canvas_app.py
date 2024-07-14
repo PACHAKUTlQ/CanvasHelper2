@@ -17,9 +17,10 @@ from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from auth import SECRET_KEY, timedelta, verify_login, authenticate_user, create_access_token, create_refresh_token
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
 from models import Position, Check, Course, URL, RequestForm
-from users import cache_file_name, create_user, user_exists
+from users import create_user, user_exists
 from config_mgr import ConfigMGR
 from canvas_mgr import CanvasMGR
+from cache_mgr import get_cache
 from updater import update
 """
 Canvas App
@@ -269,7 +270,7 @@ async def verify_config(username: str = Depends(verify_token)):
                             content={"message": "background not set"})
     # Test bid
     url = conf_content["url"]
-    conf.set_key_value(username, "url", url)
+    # conf.set_key_value(username, "url", url)
     if verify_bid(url, conf_content["bid"]):
         return JSONResponse(status_code=200, content={"message": "success"})
     else:
@@ -468,27 +469,13 @@ async def modify_course(index: int,
     dependencies=[Depends(verify_token)],
 )
 async def get_dashboard(cache: bool = False,
-                        mode: str = "html",
                         username: str = Depends(verify_token)):
     if cache:
-        # Use cache
-        cache_file = cache_file_name(username)
-        if path.exists(cache_file):
-            with open(cache_file, "r", encoding="utf-8", errors="ignore") as f:
-                obj = json.load(f)
-                if mode == "html":
-                    return {"data": obj["html"]}
-                elif mode == "json":
-                    return {"data": obj["json"]}
-                else:
-                    return JSONResponse(
-                        status_code=400,
-                        content={"message": "Mode not supported"})
-        else:
-            return JSONResponse(status_code=404,
-                                content={"message": "Cache not found"})
-    # No cache
-    canvas = CanvasMGR(username, mode)
+        cached_html = get_cache(username)
+        if cached_html is not None:
+            return {"data": cached_html}
+
+    canvas = CanvasMGR(username)
     return {"data": canvas.get_response()}
 
 

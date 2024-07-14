@@ -3,6 +3,8 @@ from passlib.context import CryptContext
 user_conf_path = "./canvas/user_configs/"
 user_cache_path = "./canvas/user_caches/"
 
+DATABASE = "canvas/canvas.db"
+
 uvicorn_domain = "localhost"  # Used to start uvicorn locally by running: `python canvas_app.py`
 uvicorn_port = 9283
 
