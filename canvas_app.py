@@ -16,7 +16,7 @@ import json
 from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM, uvicorn_domain, uvicorn_port, NUM_OF_THREADS, RELOAD
 from auth import SECRET_KEY, timedelta, verify_login, authenticate_user, create_access_token, create_refresh_token
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
-from models import Position, Check, Course, URL, RequestForm
+from models import Check, Course, URL, RequestForm
 from users import create_user, user_exists
 from config_mgr import ConfigMGR
 from canvas_mgr import CanvasMGR
@@ -480,16 +480,16 @@ async def get_dashboard(cache: bool = False,
 
 
 @app.post(
-    "/canvas/check/{name}",
+    "/canvas/check/{item_id}",
     tags=["canvas"],
     summary="Check some task",
     description="Check some task.",
     dependencies=[Depends(verify_token)],
 )
-async def set_check(name: str,
+async def set_check(item_id,
                     check: Check,
                     username: str = Depends(verify_token)):
-    conf_content = conf.get_conf(username)
+    # conf_content = conf.get_conf(username)
     """
     Check
 
@@ -498,60 +498,18 @@ async def set_check(name: str,
     if check.type < 0 or check.type > 3:
         return JSONResponse(status_code=400,
                             content={"message": "Invalid check type"})
-    all_checks = [{"name": name, "type": check.type}]
-    if "checks" in conf_content:
-        ori_checks = conf_content["checks"]
-        if not isinstance(ori_checks, List):
-            return JSONResponse(
-                status_code=404,
-                content={"message": "Courses type should be list"})
-        for ori_check in ori_checks:
-            if ori_check["name"] != name:
-                all_checks.append(ori_check)
+    all_checks = [{"item_id": item_id, "type": check.type}]
+    # if "checks" in conf_content:
+    #     ori_checks = conf_content["checks"]
+    #     if not isinstance(ori_checks, List):
+    #         return JSONResponse(
+    #             status_code=404,
+    #             content={"message": "Courses type should be list"})
+    #     for ori_check in ori_checks:
+    #         if ori_check["item_id"] != item_id:
+    #             all_checks.append(ori_check)
+    # TODO: check if the item exists to prevent XSS
     conf.set_key_value(username, "checks", all_checks)
-    return JSONResponse(status_code=200, content={"message": "success"})
-
-
-@app.get(
-    "/canvas/position",
-    tags=["canvas"],
-    summary="Get the position",
-    description="Get the position.",
-    dependencies=[Depends(verify_token)],
-)
-async def get_position(username: str = Depends(verify_token)):
-    conf_content = conf.get_conf(username)
-    """
-    Get position
-    """
-    if "position" not in conf_content:
-        return JSONResponse(status_code=404,
-                            content={"message": "Position not found"})
-    return conf_content["position"]
-
-
-@app.put(
-    "/canvas/position",
-    tags=["canvas"],
-    summary="Set the position",
-    description="Set the position.",
-    dependencies=[Depends(verify_token)],
-)
-async def update_position(position: Position,
-                          username: str = Depends(verify_token)):
-    """
-    Set position
-    """
-    conf.set_key_value(
-        username,
-        "position",
-        {
-            "left": position.left,
-            "top": position.top,
-            "width": position.width,
-            "height": position.height,
-        },
-    )
     return JSONResponse(status_code=200, content={"message": "success"})
 
 
@@ -629,7 +587,6 @@ async def get_file(name: str):
     tags=["misc"],
     summary="Open URL in web browser",
     description="Open URL in web browser.",
-    dependencies=[Depends(verify_token)],
 )
 async def open_url(data: URL):
     html_content = '<script>window.open("' + data.url + '","_blank")</script>'

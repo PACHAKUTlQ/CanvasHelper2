@@ -29,8 +29,8 @@ erDiagram
   checks {
     id INTEGER
     user_id INTEGER
-    name TEXT
     type INTEGER
+    item_id INTEGER
   }
 
   user_cache {
@@ -44,29 +44,3 @@ erDiagram
   users ||--|{ user_cache : has
 
 ```
-
-```mermaid
-erDiagram
-  users ||--|{ user_cache : has
-
-  users {
-    id INTEGER
-    username TEXT
-    hashed_password TEXT
-    semester_begin TEXT
-    url TEXT
-    bid TEXT
-    timeformat TEXT
-    background_image TEXT
-    courses JSON
-    checks JSON
-  }
-
-  user_cache {
-    user_id INTEGER
-    html TEXT
-    json TEXT
-  }
-
-```
-

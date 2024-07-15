@@ -12,13 +12,6 @@ Models
 """
 
 
-class Position(BaseModel):
-    left: int = Field(..., description="Left position")
-    top: int = Field(..., description="Top position")
-    width: int = Field(..., description="Width")
-    height: int = Field(..., description="Height")
-
-
 class Check(BaseModel):
     type: int
 
