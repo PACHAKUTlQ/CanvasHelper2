@@ -16,7 +16,7 @@ import json
 from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM, uvicorn_domain, uvicorn_port, NUM_OF_THREADS, RELOAD
 from auth import SECRET_KEY, timedelta, verify_login, authenticate_user, create_access_token, create_refresh_token
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
-from models import Check, Course, URL, RequestForm
+from models import Check, Course, RequestForm
 from users import create_user, user_exists
 from config_mgr import ConfigMGR
 from canvas_mgr import CanvasMGR
@@ -580,17 +580,6 @@ async def get_file(name: str):
     else:
         return JSONResponse(status_code=404,
                             content={"message": "File not found"})
-
-
-@app.post(
-    "/browser",
-    tags=["misc"],
-    summary="Open URL in web browser",
-    description="Open URL in web browser.",
-)
-async def open_url(data: URL):
-    html_content = '<script>window.open("' + data.url + '","_blank")</script>'
-    return HTMLResponse(content=html_content, status_code=status.HTTP_200_OK)
 
 
 if __name__ == "__main__":

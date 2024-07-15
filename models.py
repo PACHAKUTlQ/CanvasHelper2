@@ -25,11 +25,6 @@ class Course(BaseModel):
     msg: str = ""
 
 
-class URL(BaseModel):
-    url: str
-    browser: Union[str, None] = None
-
-
 class RequestForm(BaseModel):
     username: str
     password: str
