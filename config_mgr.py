@@ -68,54 +68,6 @@ class ConfigMGR:
             else:
                 return {"version": 1}
 
-    def write_conf(self, username, configuration):
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-
-            # Update the user's data in the 'users' table
-            user_fields = ', '.join(
-                f'{key} = ?' for key in configuration
-                if key not in ['id', 'username', 'checks', 'courses'])
-            user_values = [
-                value for key, value in configuration.items()
-                if key not in ['id', 'username', 'checks', 'courses']
-            ]
-            user_values.append(username)
-            cursor.execute(
-                f'''
-                UPDATE users SET {user_fields} WHERE username = ?
-            ''', user_values)
-
-            # Get the user_id for the given username
-            cursor.execute("SELECT id FROM users WHERE username = ?",
-                           (username, ))
-            user_id = cursor.fetchone()[0]
-
-            # Upsert checks data
-            if 'checks' in configuration:
-                for check in configuration['checks']:
-                    check_fields = ', '.join(check.keys())
-                    check_placeholders = ', '.join(['?'] * len(check))
-                    check_values = list(check.values())
-                    cursor.execute(
-                        f'''
-                        INSERT OR REPLACE INTO checks ({check_fields}, user_id) VALUES ({check_placeholders}, ?)
-                    ''', (*check_values, user_id))
-
-            # Upsert courses data
-            if 'courses' in configuration:
-                for course in configuration['courses']:
-                    course_fields = ', '.join(course.keys()).replace(
-                        'order', 'display_order')
-                    course_placeholders = ', '.join(['?'] * len(course))
-                    course_values = list(course.values())
-                    cursor.execute(
-                        f'''
-                        INSERT OR REPLACE INTO courses ({course_fields}, user_id) VALUES ({course_placeholders}, ?)
-                    ''', (*course_values, user_id))
-
-            conn.commit()
-
     def remove_key(self, username, key):
         self.set_key_value(username, key, None)
 
