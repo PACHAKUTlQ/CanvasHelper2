@@ -9,6 +9,24 @@ class ConfigMGR:
         pass  # No action is needed in constructor for now
 
     def get_conf(self, username):
+        # example = {
+        #     'username': 'test',
+        #     'semester_begin': '2024-06-01',
+        #     'url': 'https://canvas.com',
+        #     'bid': '',
+        #     'timeformat': 'relative',
+        #     'background_image': 'aaa.jpg',
+        #     'courses': [{
+        #         'course_id': 847,
+        #         'course_name': 'Physics',
+        #         'type': 0,
+        #         'maxshow': -1,
+        #         'order': 'reverse',
+        #         'msg': 'test1'
+        #     }],
+        #     'checks': []
+        # }
+
         with sqlite3.connect(DATABASE) as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -33,7 +51,7 @@ class ConfigMGR:
 
                 checks = self.get_checks(user_id, cursor)
                 checks_list = [
-                    dict(zip(['name', 'type'], check)) for check in checks
+                    dict(zip(['type', 'item_id'], check)) for check in checks
                 ]
 
                 user_conf = {
@@ -70,7 +88,7 @@ class ConfigMGR:
 
             # Get the user_id for the given username
             cursor.execute("SELECT id FROM users WHERE username = ?",
-                        (username, ))
+                           (username, ))
             user_id = cursor.fetchone()[0]
 
             # Upsert checks data
@@ -87,7 +105,8 @@ class ConfigMGR:
             # Upsert courses data
             if 'courses' in configuration:
                 for course in configuration['courses']:
-                    course_fields = ', '.join(course.keys()).replace('order', 'display_order')
+                    course_fields = ', '.join(course.keys()).replace(
+                        'order', 'display_order')
                     course_placeholders = ', '.join(['?'] * len(course))
                     course_values = list(course.values())
                     cursor.execute(
@@ -98,26 +117,56 @@ class ConfigMGR:
             conn.commit()
 
     def remove_key(self, username, key):
-        configuration = self.get_conf(username)
-        if key in configuration:
-            configuration[key] = None  # Set to None to remove
-            self.write_conf(username, configuration)
+        self.set_key_value(username, key, None)
 
     def set_key_value(self, username, key, value):
-        configuration = self.get_conf(username)
-        configuration[key] = value
-        self.write_conf(username, configuration)
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
 
-    def update_conf(self, username, conf):
-        self.write_conf(username, conf)
+            # Get the user_id for the given username
+            cursor.execute("SELECT id FROM users WHERE username = ?",
+                           (username, ))
+            user_id = cursor.fetchone()[0]
 
-    def set_wallpaper_path(self, username, path):
-        self.set_key_value(username, "wallpaper_path", path)
+            if key == "courses":
+                for course in value:
+                    cursor.execute(
+                        """
+                            INSERT OR REPLACE INTO courses (
+                                user_id, course_id, course_name, type, maxshow, display_order, msg
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (user_id, course['course_id'], course['course_name'],
+                         course['type'], course['maxshow'], course['order'],
+                         course['msg']))
+
+            elif key == "checks":
+                for check in value:
+                    cursor.execute(
+                        """
+                            INSERT OR REPLACE INTO checks (
+                                user_id, type, item_id
+                            ) VALUES (?, ?, ?)
+                        """, (user_id, check['type'], check['item_id']))
+
+            elif key in [
+                    "title", "semester_begin", "url", "bid", "timeformat",
+                    "background_image"
+            ]:
+                for user_conf in value:
+                    cursor.execute(
+                        f"UPDATE users SET {key} = ? WHERE username = ?",
+                        (user_conf, username))
+
+            else:
+                raise Exception("Invalid key")
+
+            conn.commit()
 
     def get_checks(self, user_id, cursor):
         cursor.execute(
             '''
-            SELECT name, type FROM checks WHERE user_id = ?
+            SELECT type, item_id, type FROM checks WHERE user_id = ?
             ''', (user_id, ))
         return cursor.fetchall()
 
@@ -127,10 +176,3 @@ class ConfigMGR:
             SELECT course_id, course_name, type, maxshow, display_order, msg FROM courses WHERE user_id = ?
             ''', (user_id, ))
         return cursor.fetchall()
-
-    def get_user_cache(self, user_id, cursor):
-        cursor.execute(
-            '''
-            SELECT * FROM user_cache WHERE user_id = ?
-            ''', (user_id, ))
-        return cursor.fetchone()

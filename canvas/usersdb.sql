@@ -14,19 +14,21 @@ CREATE TABLE courses (
     user_id INTEGER,
     course_id INTEGER,
     course_name TEXT,
-    type TEXT,
+    type INTEGER,
     maxshow INTEGER,
     display_order TEXT,
     msg TEXT,
     FOREIGN KEY (user_id) REFERENCES users (id)
+    UNIQUE(user_id, course_id)
 );
 
 CREATE TABLE checks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
-    name TEXT,
     type INTEGER,
+    item_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES users (id)
+    UNIQUE(user_id, item_id)
 );
 
 CREATE TABLE user_cache (

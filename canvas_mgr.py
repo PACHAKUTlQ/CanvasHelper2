@@ -110,7 +110,8 @@ class CanvasMGR:
         for i in allc:
             try:
                 i.run()
-            except:
+            except Exception as e:
+                print(e)
                 self.print_own(f"<h2>{i.cname} - Error</h2>\n{i.raw}")
 
         for i in allc:
@@ -141,19 +142,19 @@ class apilink:
         self.g_tformat = g_tformat
         self.usercheck = user_check
 
-    def dump_span(self, style, id, text, url: str = ""):
+    def dump_span(self, style, item_id, text, url: str = ""):
         if style == 1:
             # Positive
-            return f'<div class="single"><span class="checkbox positive" id="{id}"></span><span class="label" url="{url}">{text}</span></div>\n'
+            return f'<div class="single"><span class="checkbox positive" id="{item_id}"></span><span class="label" url="{url}">{text}</span></div>\n'
         elif style == 2:
             # wrong
-            return f'<div class="single"><span class="checkbox negative" id="{id}"></span><span class="label" url="{url}">{text}</span></div>\n'
+            return f'<div class="single"><span class="checkbox negative" id="{item_id}"></span><span class="label" url="{url}">{text}</span></div>\n'
         elif style == 3:
             # important
-            return f'<div class="single"><span class="checkbox important" id="{id}"></span><span class="label" url="{url}">{text}</span></div>\n'
+            return f'<div class="single"><span class="checkbox important" id="{item_id}"></span><span class="label" url="{url}">{text}</span></div>\n'
         else:
             # Not checked
-            return f'<div class="single"><span class="checkbox" id="{id}"></span><span class="label" url="{url}">{text}</span></div>\n'
+            return f'<div class="single"><span class="checkbox" id="{item_id}"></span><span class="label" url="{url}">{text}</span></div>\n'
 
     def num2ch(self, f: int):
         s = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -170,10 +171,10 @@ class apilink:
             # Fallback
             return rtime.strftime(format)
 
-    def get_check_status(self, name: str):
+    def get_check_status(self, item_id):
         # Return type
         for i in self.usercheck:
-            if i["name"] == name:
+            if i["item_id"] == item_id:
                 return i["type"]
         return 0
 
@@ -218,16 +219,15 @@ class apilink:
 
     def run(self):
         t = self.course_type
-        if t == "ass":
+        if t == 0:
             self.collect_assignment()
-        elif t == "ann":
+        elif t == 1:
             self.collect_announcement()
-        elif t == "dis":
+        elif t == 2:
             self.collect_discussion()
         else:
             raise Exception(
-                f"invalid show type {self.course_type} (only support ass, annc, disc)"
-            )
+                f"invalid show type {self.course_type} (only support 0, 1, 2)")
         self.add_custom_info()
 
     def add_custom_info(self):
@@ -282,19 +282,20 @@ class apilink:
                 if "timeformat" in self.other:
                     tformat = self.other["timeformat"]
                 dttime = self.time_format_control(dttime, tformat)
-                check_type = self.get_check_status(f"ass{ass['id']}")
+                check_type = self.get_check_status(ass['id'])
+                # "ass" returend from canvas, so 'id' instead of 'item_id'
                 self.output += self.dump_span(
                     check_type,
-                    f"ass{ass['id']}",
+                    ass['id'],
                     f"{ass['name']}, Due: <b>{dttime}{submit_msg}</b>",
                     ass["html_url"],
                 )
             else:
                 # No due date homework
-                check_type = self.get_check_status(f"ass{ass['id']}")
+                check_type = self.get_check_status(ass['id'])
                 self.output += self.dump_span(
                     check_type,
-                    f"ass{ass['id']}",
+                    ass['id'],
                     f"{ass['name']}{submit_msg}",
                     ass["html_url"],
                 )
@@ -320,9 +321,9 @@ class apilink:
             if maxnum == 0:
                 break
             maxnum -= 1
-            check_type = self.get_check_status(f"ann{an['id']}")
-            self.output += self.dump_span(check_type, f"ann{an['id']}",
-                                          an["title"], an["html_url"])
+            check_type = self.get_check_status(an['id'])
+            self.output += self.dump_span(check_type, an['id'], an["title"],
+                                          an["html_url"])
 
     def collect_discussion(self):
         self.cstate = "Discussion"
@@ -350,9 +351,9 @@ class apilink:
             if maxnum == 0:
                 break
             maxnum -= 1
-            check_type = self.get_check_status(f"dis{d['id']}")
-            self.output += self.dump_span(check_type, f"dis{d['id']}",
-                                          d["title"], d["html_url"])
+            check_type = self.get_check_status(d['id'])
+            self.output += self.dump_span(check_type, d['id'], d["title"],
+                                          d["html_url"])
 
     def print_out(self):
         if self.output:
