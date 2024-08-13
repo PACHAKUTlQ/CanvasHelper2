@@ -112,12 +112,6 @@ class ConfigMGR:
                     f"UPDATE users SET {key} = ? WHERE id = ?",
                     (value, user_id),
                 )
-                # cursor.execute(
-                #     f"""
-                #         INSERT OR REPLACE INTO users (id, {key}) VALUES (?, ?)
-                #     """,
-                #     (user_id, value),
-                # )
 
             else:
                 raise Exception("Invalid key")
