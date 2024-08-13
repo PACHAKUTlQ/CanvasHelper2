@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 
-from fastapi import FastAPI, Request, UploadFile, Security, HTTPException, Depends, status
+from fastapi import (
+    FastAPI,
+    Request,
+    UploadFile,
+    Security,
+    HTTPException,
+    Depends,
+    status,
+)
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -13,8 +21,23 @@ from typing import List
 import requests
 import json
 
-from global_config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM, uvicorn_domain, uvicorn_port, NUM_OF_THREADS, RELOAD
-from auth import SECRET_KEY, timedelta, verify_login, authenticate_user, create_access_token, create_refresh_token
+from global_config import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_TOKEN_EXPIRE_DAYS,
+    ALGORITHM,
+    uvicorn_domain,
+    uvicorn_port,
+    NUM_OF_THREADS,
+    RELOAD,
+)
+from auth import (
+    SECRET_KEY,
+    timedelta,
+    verify_login,
+    authenticate_user,
+    create_access_token,
+    create_refresh_token,
+)
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
 from models import Check, Course, RequestForm
 from users import create_user, user_exists
@@ -56,17 +79,22 @@ def verify_token(auth_token: str = Security(oauth2_scheme)):
     # Same as verify_login, but for interface dependency
     username = verify_login(auth_token)
     if not username:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Not authenticated",
-                            headers={"WWW-Authenticate": "Bearer"})
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return username
 
 
 def verify_bid(url, bid):
-    headers = {"Authorization": f'Bearer {bid}'}
-    url = url_format(url) + "api/v1/accounts"
-    res = requests.get(url, headers=headers).status_code
-    return res == 200
+    headers = {"Authorization": f"Bearer {bid}"}
+    url = url_format(url) + "api/v1/users/self"
+    res = requests.get(url, headers=headers)
+    code = res.status_code
+    id = res.json().get("id")
+    name = res.json().get("name")
+    return (code == 200), id, name
 
 
 # Endpoints
@@ -80,8 +108,9 @@ async def signup(form_data: RequestForm):
     print("Signup: " + form_data.username)
     if user_exists(form_data.username):
         raise HTTPException(status_code=400, detail="Username already taken")
-    if not verify_bid(form_data.url, form_data.bid):
-        raise HTTPException(status_code=400, detail="Invalid bid")
+    code, id, name = verify_bid(form_data.url, form_data.bid)
+    if not code:
+        raise HTTPException(status_code=401, detail="Invalid bid")
     create_user(form_data.username, form_data.password)
     return {"message": "Signed up"}
 
@@ -121,13 +150,15 @@ async def login(form_data: RequestForm,
     },
                                          expires_delta=refresh_token_expires)
 
-    return JSONResponse(content={
-        "message": "Logged in",
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    },
-                        status_code=status.HTTP_200_OK)
+    return JSONResponse(
+        content={
+            "message": "Logged in",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        },
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @app.post(
@@ -138,7 +169,9 @@ async def login(form_data: RequestForm,
     dependencies=[Depends(verify_token)],
 )
 async def refresh_token(form_data: RequestForm):
-    refresh_token = form_data.password  # Actually refresh_token, but treated as secure as password
+    refresh_token = (
+        form_data.password
+    )  # Actually refresh_token, but treated as secure as password
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "refresh_token":
@@ -154,17 +187,21 @@ async def refresh_token(form_data: RequestForm):
 
     # Generate new access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    new_access_token = create_access_token(data={
-        "sub": username,
-        "type": "access_token"
-    },
-                                           expires_delta=access_token_expires)
+    new_access_token = create_access_token(
+        data={
+            "sub": username,
+            "type": "access_token"
+        },
+        expires_delta=access_token_expires,
+    )
 
-    return JSONResponse(content={
-        "message": "Refreshed token",
-        "new_access_token": new_access_token,
-    },
-                        status_code=status.HTTP_200_OK)
+    return JSONResponse(
+        content={
+            "message": "Refreshed token",
+            "new_access_token": new_access_token,
+        },
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @app.get("/users/me")
@@ -270,7 +307,6 @@ async def verify_config(username: str = Depends(verify_token)):
                             content={"message": "background not set"})
     # Test bid
     url = conf_content["url"]
-    # conf.set_key_value(username, "url", url)
     if verify_bid(url, conf_content["bid"]):
         return JSONResponse(status_code=200, content={"message": "success"})
     else:
@@ -583,10 +619,11 @@ async def get_file(name: str):
 
 
 if __name__ == "__main__":
-    LOGGING_CONFIG["formatters"]["default"][
-        "fmt"] = "%(asctime)s %(levelprefix)s %(message)s"
-    LOGGING_CONFIG["formatters"]["access"][
-        "fmt"] = '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    LOGGING_CONFIG["formatters"]["default"]["fmt"] = (
+        "%(asctime)s %(levelprefix)s %(message)s")
+    LOGGING_CONFIG["formatters"]["access"]["fmt"] = (
+        '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    )
     uvicorn.run(
         app="canvas_app:app",
         host=uvicorn_domain,

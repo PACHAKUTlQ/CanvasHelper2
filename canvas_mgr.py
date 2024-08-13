@@ -19,7 +19,7 @@ Contact with canvas.
 
 class CanvasMGR:
     g_out = ""
-    g_tformat = "relative"
+    g_tformat = 0
     usercheck = []
     bid = ""
     ucommand = {}
@@ -35,7 +35,7 @@ class CanvasMGR:
 
     def reset(self):
         self.g_out = ""
-        self.g_tformat = "relative"
+        self.g_tformat = 0
         self.ucommand = self.config
 
         self.url = self.ucommand["url"]
@@ -127,7 +127,7 @@ class apilink:
                  bid: str,
                  url: str,
                  user_check,
-                 g_tformat="relative") -> None:
+                 g_tformat=0) -> None:
         self.headers = {"Authorization": f"Bearer {bid}"}
 
         self.course = course["course_id"]
@@ -163,10 +163,10 @@ class apilink:
     def time_format_control(self, rtime: datetime, format):
         if rtime < self.now:
             return "Expired"
-        if format == "origin":
-            return rtime
-        elif format == "relative":
+        if format == 0:  # Relative
             return self.relative_date(rtime)
+        elif format == 1:  # Origin
+            return rtime
         else:
             # Fallback
             return rtime.strftime(format)
@@ -265,7 +265,7 @@ class apilink:
         if len(self.ass_data) == 0 or maxnum <= 0:
             self.output += "None\n"
             return
-        if "order" in self.other and self.other["order"] == "reverse":
+        if "order" in self.other and self.other["order"] == 1:  # reverse
             self.ass_data.reverse()
         for ass in self.ass_data:
             if maxnum == 0:
@@ -315,7 +315,7 @@ class apilink:
         if len(anr) == 0 or maxnum <= 0:
             self.output += "None.\n"
             return
-        if "order" in self.other and self.other["order"] == "reverse":
+        if "order" in self.other and self.other["order"] == 1:  # reverse
             self.ann_data.reverse()
         for an in self.ann_data:
             if maxnum == 0:
@@ -345,7 +345,7 @@ class apilink:
         if len(self.dis_data) == 0 or maxnum <= 0:
             self.output += "None.\n"
             return
-        if "order" in self.other and self.other["order"] == "reverse":
+        if "order" in self.other and self.other["order"] == 1:  # reverse
             self.dis_data.reverse()
         for d in self.dis_data:
             if maxnum == 0:
