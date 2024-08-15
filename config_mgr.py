@@ -49,6 +49,7 @@ class ConfigMGR:
                     "semester_begin": user_db["semester_begin"],
                     "url": user_db["url"],
                     "bid": user_db["bid"],
+                    "title": user_db["title"],
                     "timeformat": user_db["timeformat"],
                     "background_image": user_db["background_image"],
                     "courses": courses_list,
