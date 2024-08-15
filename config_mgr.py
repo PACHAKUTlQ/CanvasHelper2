@@ -108,10 +108,11 @@ class ConfigMGR:
                     "timeformat",
                     "background_image",
             ]:
-                cursor.execute(
-                    f"UPDATE users SET {key} = ? WHERE id = ?",
-                    (value, user_id),
-                )
+                if not (key == "bid" and value == "********"):
+                    cursor.execute(
+                        f"UPDATE users SET {key} = ? WHERE id = ?",
+                        (value, user_id),
+                    )
 
             else:
                 raise Exception("Invalid key")

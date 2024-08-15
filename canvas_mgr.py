@@ -19,7 +19,7 @@ Contact with canvas.
 
 class CanvasMGR:
     g_out = ""
-    g_tformat = 0
+    g_tformat = "relative"
     usercheck = []
     bid = ""
     ucommand = {}
@@ -35,7 +35,7 @@ class CanvasMGR:
 
     def reset(self):
         self.g_out = ""
-        self.g_tformat = 0
+        self.g_tformat = "relative"
         self.ucommand = self.config
 
         self.url = self.ucommand["url"]
@@ -59,9 +59,11 @@ class CanvasMGR:
                            (self.username, ))
             user_id = cursor.fetchone()[0]
             cursor.execute(
-                '''
+                """
                 INSERT OR REPLACE INTO user_cache (user_id, html) VALUES (?, ?)
-                ''', (user_id, html))
+                """,
+                (user_id, html),
+            )
             conn.commit()
             return html
 
@@ -127,7 +129,7 @@ class apilink:
                  bid: str,
                  url: str,
                  user_check,
-                 g_tformat=0) -> None:
+                 g_tformat="relative") -> None:
         self.headers = {"Authorization": f"Bearer {bid}"}
 
         self.course = course["course_id"]
@@ -163,9 +165,9 @@ class apilink:
     def time_format_control(self, rtime: datetime, format):
         if rtime < self.now:
             return "Expired"
-        if format == 0:  # Relative
+        if format == "relative":
             return self.relative_date(rtime)
-        elif format == 1:  # Origin
+        elif format == "origin":
             return rtime
         else:
             # Fallback
@@ -265,7 +267,7 @@ class apilink:
         if len(self.ass_data) == 0 or maxnum <= 0:
             self.output += "None\n"
             return
-        if "order" in self.other and self.other["order"] == 1:  # reverse
+        if "order" in self.other and self.other["order"] == "reverse":
             self.ass_data.reverse()
         for ass in self.ass_data:
             if maxnum == 0:
@@ -282,20 +284,20 @@ class apilink:
                 if "timeformat" in self.other:
                     tformat = self.other["timeformat"]
                 dttime = self.time_format_control(dttime, tformat)
-                check_type = self.get_check_status(ass['id'])
+                check_type = self.get_check_status(ass["id"])
                 # "ass" returend from canvas, so 'id' instead of 'item_id'
                 self.output += self.dump_span(
                     check_type,
-                    ass['id'],
+                    ass["id"],
                     f"{ass['name']}, Due: <b>{dttime}{submit_msg}</b>",
                     ass["html_url"],
                 )
             else:
                 # No due date homework
-                check_type = self.get_check_status(ass['id'])
+                check_type = self.get_check_status(ass["id"])
                 self.output += self.dump_span(
                     check_type,
-                    ass['id'],
+                    ass["id"],
                     f"{ass['name']}{submit_msg}",
                     ass["html_url"],
                 )
@@ -315,14 +317,14 @@ class apilink:
         if len(anr) == 0 or maxnum <= 0:
             self.output += "None.\n"
             return
-        if "order" in self.other and self.other["order"] == 1:  # reverse
+        if "order" in self.other and self.other["order"] == "reverse":
             self.ann_data.reverse()
         for an in self.ann_data:
             if maxnum == 0:
                 break
             maxnum -= 1
-            check_type = self.get_check_status(an['id'])
-            self.output += self.dump_span(check_type, an['id'], an["title"],
+            check_type = self.get_check_status(an["id"])
+            self.output += self.dump_span(check_type, an["id"], an["title"],
                                           an["html_url"])
 
     def collect_discussion(self):
@@ -345,14 +347,14 @@ class apilink:
         if len(self.dis_data) == 0 or maxnum <= 0:
             self.output += "None.\n"
             return
-        if "order" in self.other and self.other["order"] == 1:  # reverse
+        if "order" in self.other and self.other["order"] == "reverse":
             self.dis_data.reverse()
         for d in self.dis_data:
             if maxnum == 0:
                 break
             maxnum -= 1
-            check_type = self.get_check_status(d['id'])
-            self.output += self.dump_span(check_type, d['id'], d["title"],
+            check_type = self.get_check_status(d["id"])
+            self.output += self.dump_span(check_type, d["id"], d["title"],
                                           d["html_url"])
 
     def print_out(self):

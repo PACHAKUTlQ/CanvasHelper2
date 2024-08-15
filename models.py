@@ -13,7 +13,7 @@ class Course(BaseModel):
     name: str
     type: int
     maxshow: int = -1
-    order: int = 0  # normal
+    order: str = "normal"
     msg: str = ""
 
 

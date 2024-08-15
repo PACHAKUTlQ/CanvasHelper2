@@ -7,7 +7,7 @@ CREATE TABLE users (
     bid TEXT,
     canvas_id INTEGER,
     canvas_name TEXT,
-    timeformat INTEGER,
+    timeformat TEXT,
     background_image TEXT
 );
 
@@ -18,7 +18,7 @@ CREATE TABLE courses (
     course_name TEXT,
     type INTEGER,
     maxshow INTEGER,
-    display_order INTEGER,
+    display_order TEXT,
     msg TEXT,
     FOREIGN KEY (user_id) REFERENCES users (id)
     UNIQUE(user_id, course_id)

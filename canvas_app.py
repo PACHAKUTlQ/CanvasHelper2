@@ -40,7 +40,7 @@ from auth import (
 )
 from local_func import check_file, htmlspecialchars, init_conf_path, url_format
 from models import Check, Course, RequestForm
-from users import create_user, user_exists
+from users import create_user, user_exists, same_user
 from config_mgr import ConfigMGR
 from canvas_mgr import CanvasMGR
 from cache_mgr import get_cache
@@ -72,7 +72,7 @@ conf = ConfigMGR()
 init_conf_path()
 
 # Self Update
-update()
+# update()
 
 
 def verify_token(auth_token: str = Security(oauth2_scheme)):
@@ -107,11 +107,17 @@ def verify_bid(url, bid):
 async def signup(form_data: RequestForm):
     print("Signup: " + form_data.username)
     if user_exists(form_data.username):
-        raise HTTPException(status_code=400, detail="Username already taken")
-    code, id, name = verify_bid(form_data.url, form_data.bid)
+        raise HTTPException(status_code=401, detail="Username already taken")
+
+    code, canvas_id, canvas_name = verify_bid(form_data.url, form_data.bid)
     if not code:
         raise HTTPException(status_code=401, detail="Invalid bid")
-    create_user(form_data.username, form_data.password)
+
+    # Every Canvas user has a unique canvas_id (from api). If exsists, then duplicated account
+    if same_user(form_data.url, canvas_id):
+        raise HTTPException(status_code=401,
+                            detail="Multiple accounts not allowed")
+    create_user(form_data, canvas_id, canvas_name)
     return {"message": "Signed up"}
 
 
@@ -217,7 +223,9 @@ async def read_users_me(current_user: dict = Depends(verify_token)):
     dependencies=[Depends(verify_token)],
 )
 async def get_configuration(username: str = Depends(verify_token)):
-    return conf.get_conf(username)
+    config = conf.get_conf(username)
+    config["bid"] = "********"  # Hide canvas access token
+    return config
 
 
 @app.get(
