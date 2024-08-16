@@ -11,15 +11,17 @@ def create_user(form_data, canvas_id, canvas_name):
         hashed_password = pwd_context.hash(form_data.password)
         cursor.execute(
             """
-            INSERT INTO users (username, hashed_password, url, bid, canvas_id, canvas_name) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (username, hashed_password, url, bid, title, canvas_id, canvas_name, timeformat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 form_data.username,
                 hashed_password,
                 form_data.url,
                 form_data.bid,
+                "Canvas Dashboard",
                 canvas_id,
                 canvas_name,
+                "relative",
             ),
         )
         conn.commit()
