@@ -16,7 +16,7 @@ RELOAD = False  # True for development
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 24 * 60  # 1 day
+ACCESS_TOKEN_EXPIRE_MINUTES = 2 * 24 * 60  # 1 day
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 days
 
 ALLOWED_EXTENSION = {
