@@ -1,7 +1,7 @@
 import os
 from os import path
 
-from global_config import user_conf_path, user_cache_path, ALLOWED_EXTENSION
+from global_config import ALLOWED_EXTENSION
 
 
 # INFO: Safety check for file
