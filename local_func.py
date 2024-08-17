@@ -27,18 +27,10 @@ def htmlspecialchars(text):
 # Make sure all folders exist:
 # |-- canvas/
 # |   |-- .secret         // Automatically generated
-# |   |-- user_configs/
-# |   |-- user_caches/
 def init_conf_path():
     if not os.path.exists("canvas"):
         os.mkdir("canvas")
         print("No canvas folder found. Created one.")
-    if not os.path.exists(user_conf_path):
-        os.mkdir(user_conf_path)
-        print("No user configs folder found. Created one.")
-    if not os.path.exists(user_cache_path):
-        os.mkdir(user_cache_path)
-        print("No user cache folder found. Created one.")
 
 
 # Format url into https://example.com/

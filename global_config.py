@@ -1,17 +1,14 @@
 from passlib.context import CryptContext
 
-user_conf_path = "./canvas/user_configs/"
-user_cache_path = "./canvas/user_caches/"
-
 DATABASE = "canvas/canvas.db"
 
-uvicorn_domain = "localhost"  # Used to start uvicorn locally by running: `python canvas_app.py`
+uvicorn_domain = "0.0.0.0"  # Used to start uvicorn locally by running: `python canvas_app.py`
 uvicorn_port = 9283
 
 # Private key name: key.pem
 # Public key name: cert.pem
 
-NUM_OF_THREADS = 1  # 1 for running locally, (2*cores+1) for running on server
+NUM_OF_THREADS = 2  # 1 for running locally, (2*cores+1) for running on server
 
 RELOAD = False  # True for development
 
